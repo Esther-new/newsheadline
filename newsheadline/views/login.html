@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Sign in &laquo; Admin</title>
+  <link rel="stylesheet" href="/public/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="/public/css/admin.css">
+</head>
+<body>
+  <!-- {{include "./navbar.html"}} -->
+  <div class="login">
+    <form class="login-wrap">
+      <img class="avatar" src="/public/uploads/default.png">
+      <!-- 有错误信息时展示 -->
+      <!-- <div class="alert alert-danger">
+        <strong>错误！</strong> 用户名或密码错误！
+      </div> -->
+      <div class="form-group">
+        <label for="email" class="sr-only">邮箱</label>
+        <input id="email" type="email" name="email" class="form-control" placeholder="邮箱" autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password" class="sr-only">密码</label>
+        <input id="password" type="password" name="password" class="form-control" placeholder="密码">
+      </div>
+      <a class="loginbtn btn btn-primary btn-block" href="javascript:;">登 录</a>
+    </form>
+  </div>
+  <!-- {{include "./aside.html"}} -->
+</body>
+<script src="/public/vendors/jquery/jquery-3.5.1.js"></script>
+<script src="/public/vendors/bootstrap/js/bootstrap.js"></script>
+<script src="/public/vendors/nprogress/nprogress.css"></script>
+<script src="/public/vendors/layer/layer.js"></script>
+<script>
+  $(function(){
+      //ajax登录逻辑
+    $(".loginbtn").click(function(){
+        var email = $.trim($("input[name=email]").val());
+        var password = $.trim($("input[name=password]").val());
+        //校验数据
+        if(email == "" || password == ""){
+            layer.msg("邮箱或密码不能为空.",{icon:2});
+            return;
+        }
+        var emailReg = /^\w+\@+(?:\w+\.)+[a-zA-Z]{2,5}$/g;
+        if(!emailReg.test(email)){
+            layer.msg("邮箱格式非法",{icon:2});
+            return;
+        }
+        //获取表单数据，发送ajax请求
+        var formData = $(".login-wrap").serialize();
+        var _self=$(this);
+        _self.prop("disabled",true).html("登陆中...");
+        $.post("/login",formData,function(res){
+          if(res.code == 200){
+            location.href="/";
+          }else{
+            layer.msg(res.message,{icon:2});
+            _this.prop("disabled",false).html("登录")
+          }
+        })
+
+    })
+  })
+    
+</script>
+</html>

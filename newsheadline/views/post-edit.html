@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Add new post &laquo; Admin</title>
+  <link rel="stylesheet" href="/public/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="/public/vendors/font-awesome/css/font-awesome.css">
+  <link rel="stylesheet" href="/public/vendors/nprogress/nprogress.css">
+  <link rel="stylesheet" href="/public/css/admin.css">
+  <script src="/public/vendors/nprogress/nprogress.js"></script>
+</head>
+<body>
+  <script>NProgress.start()</script>
+
+  <div class="main">
+    {{include "./navbar.html"}}
+    <div class="container-fluid">
+      <div class="page-title">
+        <h1>写文章</h1>
+      </div>
+      <!-- 有错误信息时展示 -->
+      <!-- <div class="alert alert-danger">
+        <strong>错误！</strong>发生XXX错误
+      </div> -->
+      <form class="row">
+        <div class="col-md-9">
+          <div class="form-group">
+            <label for="title">标题</label>
+            <input id="title" class="form-control input-lg" name="title" type="text" value="{{data.title}}" placeholder="文章标题">
+          </div>
+          <div class="form-group">
+            <label for="content">标题</label>
+            <textarea id="content" class="form-control input-lg" name="content" cols="30" rows="10" placeholder="内容">{{data.content}}</textarea>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="feature">特色图像</label>
+            <img class="help-block thumbnail" src="{{data.feature}}" style="display: block">
+            <input id="feature" class="form-control" name="feature" type="file">
+            <!-- 用于保存需要上传文件成功的路径 -->
+            <input type="hidden" name="feature" value="">
+            <!-- 保留文章编辑时候的原图片路径 -->
+            <input type="hidden" name="oldfeature" value="{{data.feature}}">
+            <!-- show when image chose -->
+            
+          </div>
+          <div class="form-group">
+            <label for="category">所属分类</label>
+            <select id="category" class="form-control" name="category">
+              {{each catData}}
+              <option value="{{$value.cat_id}}">{{$value.cat_name}}</option>
+              {{/each}}
+              <!-- {{each catData}}
+              <option value="{{$value.cat_id}}">{{$value.cat_name}}</option>
+              {{/each}} -->
+            </select>
+              
+          </div>
+          <div class="form-group">
+            <label for="created">发布时间</label>
+            <input id="created" class="form-control" name="created" value="{{data.created}}" type="text">
+          </div>
+          <div class="form-group">
+            <label for="status">状态</label>
+            <select id="status" class="form-control" name="status">
+              <!-- each循环 -->
+              {{each status}}
+              <option value="{{$value.key}}">{{$value.text}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="form-group">
+            <button id="updPost" class="btn btn-primary" type="button">保存</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  </div>
+  {{include "./aside.html"}}
+  <script src="/public/vendors/jquery/jquery.js"></script>
+  <script src="/public/vendors/bootstrap/js/bootstrap.js"></script>
+  <script src="/public/vendors/layer/layer.js"></script>
+  <script src="/public/vendors/laydate/laydate.js"></script>
+  <script>NProgress.done()</script>
+</body>
+<script>
+    $(function(){
+      //初始化时间
+      laydate.render({
+        //指定元素
+        elem:'#created',
+        type:"datetime",
+      })
+    })
+
+     // ajax实现文章的修改，编辑入库
+     $("#updPost").click(function(){
+       //旧图片路径
+        var oldfeature = $("input[name='oldfeature']").val();
+        //获取新路径
+        var newfeature = $("input[name='feature']").val();
+        //如果有新图片的话就用新路径，没有则是旧路径
+        var path = oldfeature || newfeature;
+        //路径有两种情况 /public/111.png 或 ./public/111.png
+        //把最开头的路径./或/替换成./
+        path = path.replace("/^\.?\//","./");
+        $("input[name='feature']").val(path);
+        var formData = $("form").serialize();
+        $.ajax({
+           url:"/updPost",
+           type:"post",
+           data:formData,
+           success:function(res){
+              if(res.code == 200){
+                layer.msg(res.message,{icon:1});
+                console.log(res.message);
+                location.href="/posts";
+              }else{
+                layer.msg(res.message,{icon:2});
+              }
+           }
+        })
+
+     })
+
+     
+        //ajax实现"上传文件
+        //值改变事件
+        $("#feature").change(function(){
+          //要通过formdata获取文件的二进制数据
+          if(this.files.length == 0){
+            return ;
+          }
+          var file = this.files[0];
+          //把文件二进制数据设置到formdata对象中
+          var formData = new FormData();
+          //属性名可以随便命名，值为二进制数据
+          //追加数据
+          formData.append('feature',file);
+          $.ajax({
+            url:'/uploadFeature',
+            type:"post",
+            data:formData,
+            processData:false,  //将数据转换成对象，不做数据处理
+            contentType:false //不设置数据类型
+          }).then(res =>{
+            //回显图片
+            $('.thumbnail').attr('src',res.fullpath.replace("./","/")).show();
+            $("input[name='feature']").val(res.fullpath);
+          })
+
+        })
+
+    
+</script>
+</html>
